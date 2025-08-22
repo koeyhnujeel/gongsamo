@@ -1,11 +1,20 @@
 package com.zunza.gongsamo.user.service
 
+import com.zunza.gongsamo.security.jwt.JwtTokenProvider
+import com.zunza.gongsamo.security.user.CustomUserDetails
 import com.zunza.gongsamo.user.dto.EmailAvailableResponse
+import com.zunza.gongsamo.user.dto.LoginRequest
 import com.zunza.gongsamo.user.dto.NicknameAvailableResponse
 import com.zunza.gongsamo.user.dto.SignupRequest
 import com.zunza.gongsamo.user.entity.User
+import com.zunza.gongsamo.user.exception.LoginFailedException
+import com.zunza.gongsamo.user.repository.RefreshJwtRepository
 import com.zunza.gongsamo.user.repository.UserRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.AuthenticationException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
@@ -14,7 +23,10 @@ private val logger = KotlinLogging.logger {  }
 @Service
 class AuthService(
     private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val jwtTokenProvider: JwtTokenProvider,
+    private val authenticationManager: AuthenticationManager,
+    private val refreshJwtRepository: RefreshJwtRepository
 ) {
     fun isEmailAvailable(email: String): EmailAvailableResponse {
         validateEmailFormat(email)
@@ -41,6 +53,32 @@ class AuthService(
         ))
     }
 
+    fun login(loginRequest: LoginRequest): Map<String, String> {
+        val authenticationToken = UsernamePasswordAuthenticationToken(
+            loginRequest.email,
+            loginRequest.password
+        )
+
+        val authentication = authenticateUser(authenticationToken)
+        val userDetails = authentication.principal as CustomUserDetails
+
+        val accessJwt = jwtTokenProvider.generateAccessJwt(
+            userDetails.userId,
+            userDetails.authorities)
+        val refreshJwt = jwtTokenProvider.generateRefreshJwt(userDetails.userId)
+        refreshJwtRepository.save(userDetails.userId, refreshJwt)
+
+        return mapOf(
+            "nickname" to userDetails.nickname,
+            "accessJwt" to accessJwt,
+            "refreshJwt" to refreshJwt
+        )
+    }
+
+    fun logout(userId: Long) {
+        refreshJwtRepository.delete(userId)
+    }
+
     private fun validateEmailFormat(email: String) {
         val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")
         if (!emailRegex.matches(email)) {
@@ -54,6 +92,16 @@ class AuthService(
         if (!nicknameRegex.matches(nickname)) {
             logger.warn { "잘못된 닉네임 형식입니다: $nickname" }
             throw IllegalArgumentException("잘못된 닉네임 형식입니다.")
+        }
+    }
+
+    private fun authenticateUser(
+        authenticationToken: UsernamePasswordAuthenticationToken
+    ): Authentication {
+        try {
+            return authenticationManager.authenticate(authenticationToken)
+        } catch (e: AuthenticationException) {
+            throw LoginFailedException()
         }
     }
 }

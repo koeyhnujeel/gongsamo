@@ -8,16 +8,22 @@ class CustomUserDetails(
     private val user: User
 ) : UserDetails {
 
+    val userId: Long
+        get() = user.id
+
+    val nickname: String
+        get() = user.nickname
+
     override fun getAuthorities(): Collection<GrantedAuthority?>? {
-        TODO("Not yet implemented")
+        return mutableListOf(GrantedAuthority { "ROLE_USER" })
     }
 
     override fun getPassword(): String? {
-        TODO("Not yet implemented")
+        return user.password
     }
 
     override fun getUsername(): String? {
-        TODO("Not yet implemented")
+        return user.email
     }
 
     override fun isAccountNonExpired(): Boolean {
