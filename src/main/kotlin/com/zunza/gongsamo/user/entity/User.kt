@@ -22,4 +22,17 @@ class User(
 
     @Column(nullable = false)
     val password: String
-) : BaseEntity()
+) : BaseEntity() {
+
+    companion object {
+        fun of(
+            email: String,
+            nickname: String,
+            password: String
+        ) = User(
+            email = email,
+            nickname = nickname,
+            password = password
+        )
+    }
+}

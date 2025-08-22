@@ -2,15 +2,19 @@ package com.zunza.gongsamo.user.service
 
 import com.zunza.gongsamo.user.dto.EmailAvailableResponse
 import com.zunza.gongsamo.user.dto.NicknameAvailableResponse
+import com.zunza.gongsamo.user.dto.SignupRequest
+import com.zunza.gongsamo.user.entity.User
 import com.zunza.gongsamo.user.repository.UserRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {  }
 
 @Service
 class AuthService(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val passwordEncoder: PasswordEncoder
 ) {
     fun isEmailAvailable(email: String): EmailAvailableResponse {
         validateEmailFormat(email)
@@ -26,6 +30,15 @@ class AuthService(
             true -> NicknameAvailableResponse(false)
             false -> NicknameAvailableResponse(true)
         }
+    }
+
+    fun signup(signupRequest: SignupRequest) {
+        val encodedPassword = passwordEncoder.encode(signupRequest.password)
+        userRepository.save(User.of(
+            signupRequest.email,
+            signupRequest.nickname,
+            encodedPassword
+        ))
     }
 
     private fun validateEmailFormat(email: String) {
