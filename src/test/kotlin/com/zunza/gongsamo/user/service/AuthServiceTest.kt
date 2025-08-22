@@ -1,15 +1,39 @@
 package com.zunza.gongsamo.user.service
 
+import com.zunza.gongsamo.security.jwt.JwtTokenProvider
+import com.zunza.gongsamo.security.user.CustomUserDetails
+import com.zunza.gongsamo.user.dto.LoginRequest
+import com.zunza.gongsamo.user.entity.User
+import com.zunza.gongsamo.user.exception.LoginFailedException
+import com.zunza.gongsamo.user.repository.RefreshJwtRepository
 import com.zunza.gongsamo.user.repository.UserRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.verify
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
+import org.springframework.security.crypto.password.PasswordEncoder
 
 class AuthServiceTest : BehaviorSpec ({
     val userRepository = mockk<UserRepository>()
-    val authService = AuthService(userRepository)
+    val passwordEncoder = mockk<PasswordEncoder>()
+    val jwtTokenProvider = mockk<JwtTokenProvider>()
+    val authenticationManager = mockk<AuthenticationManager>()
+    val refreshJwtRepository = mockk<RefreshJwtRepository>()
+
+    val authService = AuthService(
+        userRepository,
+        passwordEncoder,
+        jwtTokenProvider,
+        authenticationManager,
+        refreshJwtRepository
+    )
 
     Given("회원가입 시 이메일, 닉네임 중복 체크할 때") {
         val email = "test@email.com"
@@ -61,6 +85,53 @@ class AuthServiceTest : BehaviorSpec ({
                 shouldThrow<IllegalArgumentException> {
                     authService.isNicknameAvailable(invalidNickname)
                 }
+            }
+        }
+    }
+
+    Given("유저가 올바른 이메일과 패스워드로 로그인 시도할 때") {
+        val loginRequest = LoginRequest("test@example.com", "password11!")
+        val authenticationToken = UsernamePasswordAuthenticationToken(loginRequest.email, loginRequest.password)
+
+        val user = User(1L,
+            "test@example.com",
+            "test",
+            "encodedPassword",
+        )
+
+        val customUserDetails = CustomUserDetails(user)
+        val authentication = mockk<Authentication>()
+
+        every { authentication.principal } returns customUserDetails
+        every { authenticationManager.authenticate(authenticationToken) } returns authentication
+        every { jwtTokenProvider.generateAccessJwt(1L, customUserDetails.authorities) } returns "access-jwt"
+        every { jwtTokenProvider.generateRefreshJwt(1L) } returns "refresh-jwt"
+        every { refreshJwtRepository.save(1L, "refresh-jwt") } just Runs
+
+        When("로그인 메소드를 호출하면") {
+            val result = authService.login(loginRequest)
+
+            Then("닉네임과 accessJwt, refreshJwt가 반환된다") {
+                result["nickname"] shouldBe "test"
+                result["accessJwt"] shouldBe "access-jwt"
+                result["refreshJwt"] shouldBe "refresh-jwt"
+                verify(exactly = 1) { refreshJwtRepository.save(any(), any()) }
+            }
+        }
+    }
+
+    Given("비밀번호가 틀려서 인증에 실패할 때") {
+        val loginRequest = LoginRequest("wrong@example.com", "wrong")
+        val authenticationToken = UsernamePasswordAuthenticationToken(loginRequest.email, loginRequest.password)
+
+        every { authenticationManager.authenticate(authenticationToken) } throws LoginFailedException()
+
+        When("로그인 메소드를 호출하면") {
+            Then("LoginFailedException이 발생한다") {
+                val exception = shouldThrow<LoginFailedException> {
+                    authService.login(loginRequest)
+                }
+                exception.message shouldBe "아이디 또는 비밀번호를 확인해 주세요."
             }
         }
     }
