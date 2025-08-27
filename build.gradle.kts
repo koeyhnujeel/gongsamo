@@ -4,6 +4,7 @@ plugins {
 	id("org.springframework.boot") version "3.5.4"
 	id("io.spring.dependency-management") version "1.1.7"
 	kotlin("plugin.jpa") version "1.9.25"
+	kotlin("kapt") version "1.9.25"
 }
 
 group = "com.zunza"
@@ -29,6 +30,8 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("io.jsonwebtoken:jjwt:0.12.6") // JWT
 	implementation("io.github.oshai:kotlin-logging-jvm:7.0.3") // Logging
+	implementation("com.querydsl:querydsl-jpa:5.1.0:jakarta") // Querydsl
+	kapt("com.querydsl:querydsl-apt:5.1.0:jakarta")
 
 	runtimeOnly("com.mysql:mysql-connector-j")
 
