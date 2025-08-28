@@ -4,22 +4,26 @@ import com.querydsl.core.types.Expression
 import com.querydsl.core.types.OrderSpecifier
 import com.querydsl.core.types.Projections
 import com.querydsl.core.types.dsl.BooleanExpression
+import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import com.zunza.gongsamo.post.constant.SortType
 import com.zunza.gongsamo.post.dto.LocationFilter
 import com.zunza.gongsamo.post.dto.NextCursor
 import com.zunza.gongsamo.post.dto.PostCursor
+import com.zunza.gongsamo.post.dto.PostDetailsResponse
 import com.zunza.gongsamo.post.dto.PostPageResponse
 import com.zunza.gongsamo.post.dto.PostPreview
 import com.zunza.gongsamo.post.entity.QParticipant
 import com.zunza.gongsamo.post.entity.QPost
-import org.springframework.stereotype.Component
+import com.zunza.gongsamo.user.entity.QUser
+import org.springframework.stereotype.Repository
 
 
-@Component
+@Repository
 class CustomPostRepositoryImpl(
     private val jpaQueryFactory: JPAQueryFactory,
     private val post: QPost = QPost.post,
+    private val user: QUser = QUser.user,
     private val participant: QParticipant = QParticipant.participant
 ) : CustomPostRepository {
     override fun findPageByCursor(
@@ -67,19 +71,19 @@ class CustomPostRepositoryImpl(
         if (locationFilter.sido == "전체") return null
 
         var condition: BooleanExpression =
-            post.meetingLocation.region1DepthName
+            post.meetingLocation.sido
             .eq(locationFilter.sido)
 
         locationFilter.sigungu?.let { region2 ->
             condition = condition.and(
-                post.meetingLocation.region2DepthName
+                post.meetingLocation.sigungu
                     .eq(locationFilter.sigungu)
             )
         }
 
         locationFilter.dong?.let { region3 ->
             condition = condition.and(
-                post.meetingLocation.region3DepthName
+                post.meetingLocation.dong
                     .eq(locationFilter.dong)
             )
         }
@@ -136,5 +140,75 @@ class CustomPostRepositoryImpl(
                 else -> NextCursor(result.last().id, result.last().recruitmentDeadline)
             }
         }
+    }
+
+    override fun findPostDetailsById(
+        postId: Long,
+        userId: Long?
+    ): PostDetailsResponse? {
+        val userParticipant = QParticipant("userParticipant")
+
+        fun isHost(): Expression<Boolean> {
+            return if (userId != null) {
+                post.host.id.eq(userId)
+            } else {
+                Expressions.constant(false)
+            }
+        }
+
+        fun isParticipant(): Expression<Boolean> {
+            return if (userId != null) {
+                userParticipant.user.id.eq(userId)
+            } else {
+                Expressions.constant(false)
+            }
+        }
+
+        return jpaQueryFactory.select(
+            Projections.constructor(
+                PostDetailsResponse::class.java,
+                post.id,
+                post.host.nickname,
+                post.title,
+                post.description,
+                post.settlementType,
+                post.status,
+                post.productImageUrl,
+                post.productLink,
+                post.productPrice,
+                post.maxParticipants,
+                participant.id.countDistinct(),
+                post.recruitmentDeadline,
+                post.meetingLocation.placeName,
+                post.meetingLocation.x,
+                post.meetingLocation.y,
+                isHost(),
+                isParticipant(),
+                post.createdAt
+            )
+        )
+            .from(post)
+            .join(post.host, user)
+            .leftJoin(post.participants, participant)
+            .leftJoin(userParticipant).on(userParticipant.post.id.eq(post.id))
+            .where(post.id.eq(postId))
+            .groupBy(post.id,
+                post.host.id,
+                post.title,
+                post.description,
+                post.settlementType,
+                post.status,
+                post.productImageUrl,
+                post.productLink,
+                post.productPrice,
+                post.maxParticipants,
+                post.recruitmentDeadline,
+                post.meetingLocation.placeName,
+                post.meetingLocation.x,
+                post.meetingLocation.y,
+                post.createdAt,
+                post.host.nickname,
+            )
+            .fetchOne()
     }
 }

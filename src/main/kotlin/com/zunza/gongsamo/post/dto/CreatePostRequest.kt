@@ -1,7 +1,7 @@
 package com.zunza.gongsamo.post.dto
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import com.zunza.gongsamo.post.entity.SettlementType
+import com.zunza.gongsamo.post.constant.SettlementType
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import java.math.BigDecimal

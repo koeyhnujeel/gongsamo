@@ -1,8 +1,10 @@
 package com.zunza.gongsamo.post.constant
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
 
 enum class SettlementType(
+    @JsonValue
     val value: String
 ) {
     FACE_TO_FACE("만나서 정산"),
