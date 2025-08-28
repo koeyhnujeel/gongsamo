@@ -3,8 +3,8 @@ plugins {
 	kotlin("plugin.spring") version "1.9.25"
 	id("org.springframework.boot") version "3.5.4"
 	id("io.spring.dependency-management") version "1.1.7"
+	id("com.google.devtools.ksp") version "1.9.25-1.0.20"
 	kotlin("plugin.jpa") version "1.9.25"
-	kotlin("kapt") version "1.9.25"
 }
 
 group = "com.zunza"
@@ -30,8 +30,9 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("io.jsonwebtoken:jjwt:0.12.6") // JWT
 	implementation("io.github.oshai:kotlin-logging-jvm:7.0.3") // Logging
-	implementation("com.querydsl:querydsl-jpa:5.1.0:jakarta") // Querydsl
-	kapt("com.querydsl:querydsl-apt:5.1.0:jakarta")
+	implementation("io.github.openfeign.querydsl:querydsl-jpa:6.11") //OpenFeign QueryDSL
+	ksp("io.github.openfeign.querydsl:querydsl-ksp-codegen:6.11")
+	annotationProcessor("io.github.openfeign.querydsl:querydsl-apt:6.11:jakarta")
 
 	runtimeOnly("com.mysql:mysql-connector-j")
 
