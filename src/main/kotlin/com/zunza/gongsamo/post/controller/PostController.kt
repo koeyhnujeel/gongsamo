@@ -5,6 +5,7 @@ import com.zunza.gongsamo.post.constant.SortType
 import com.zunza.gongsamo.post.dto.CreatePostRequest
 import com.zunza.gongsamo.post.dto.LocationFilter
 import com.zunza.gongsamo.post.dto.PostCursor
+import com.zunza.gongsamo.post.dto.PostDetailsResponse
 import com.zunza.gongsamo.post.dto.PostPageResponse
 import com.zunza.gongsamo.post.service.PostService
 import jakarta.validation.Valid
@@ -13,11 +14,11 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.ModelAttribute
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.time.LocalDateTime
 
 @RestController
 class PostController(
@@ -45,5 +46,13 @@ class PostController(
             size,
             postCursor
             ))
+    }
+
+    @GetMapping("/api/posts/{postId}")
+    fun getPostDetails(
+        @PathVariable postId: Long,
+        @AuthenticationPrincipal userId: Long? = null
+    ): ResponseEntity<PostDetailsResponse> {
+        return ResponseEntity.ok(postService.getPostDetails(postId, userId))
     }
 }

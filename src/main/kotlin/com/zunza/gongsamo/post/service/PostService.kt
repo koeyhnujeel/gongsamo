@@ -4,10 +4,12 @@ import com.zunza.gongsamo.post.constant.SortType
 import com.zunza.gongsamo.post.dto.CreatePostRequest
 import com.zunza.gongsamo.post.dto.LocationFilter
 import com.zunza.gongsamo.post.dto.PostCursor
+import com.zunza.gongsamo.post.dto.PostDetailsResponse
 import com.zunza.gongsamo.post.dto.PostPageResponse
 import com.zunza.gongsamo.post.entity.MeetingLocation
 import com.zunza.gongsamo.post.entity.Participant
 import com.zunza.gongsamo.post.entity.Post
+import com.zunza.gongsamo.post.exception.PostNotFoundException
 import com.zunza.gongsamo.post.repository.PostRepository
 import com.zunza.gongsamo.user.exception.UserNotFoundException
 import com.zunza.gongsamo.user.repository.UserRepository
@@ -49,5 +51,13 @@ class PostService(
             size,
             postCursor
         )
+    }
+
+    fun getPostDetails(
+        postId: Long,
+        userId: Long?
+    ): PostDetailsResponse? {
+        return postRepository.findPostDetailsById(postId, userId)
+            ?: throw PostNotFoundException(postId)
     }
 }
