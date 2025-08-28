@@ -8,7 +8,7 @@ class UserNotFoundException(
 ) : CustomException(MESSAGE + id) {
 
     companion object {
-        private const val MESSAGE = "사용자를 찾을 수 업습니다: "
+        private const val MESSAGE = "사용자를 찾을 수 없습니다: "
     }
 
     override fun getStatusCode() =
