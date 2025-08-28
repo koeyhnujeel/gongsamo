@@ -1,6 +1,7 @@
 package com.zunza.gongsamo.post.entity
 
 import com.zunza.gongsamo.common.BaseEntity
+import com.zunza.gongsamo.participant.entity.Participant
 import com.zunza.gongsamo.post.constant.PostStatus
 import com.zunza.gongsamo.post.constant.SettlementType
 import com.zunza.gongsamo.post.dto.CreatePostRequest

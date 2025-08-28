@@ -7,7 +7,7 @@ import com.zunza.gongsamo.post.dto.PostCursor
 import com.zunza.gongsamo.post.dto.PostDetailsResponse
 import com.zunza.gongsamo.post.dto.PostPageResponse
 import com.zunza.gongsamo.post.entity.MeetingLocation
-import com.zunza.gongsamo.post.entity.Participant
+import com.zunza.gongsamo.participant.entity.Participant
 import com.zunza.gongsamo.post.entity.Post
 import com.zunza.gongsamo.post.exception.PostNotFoundException
 import com.zunza.gongsamo.post.repository.PostRepository
