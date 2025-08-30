@@ -6,6 +6,7 @@ import com.querydsl.core.types.Projections
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.impl.JPAQueryFactory
+import com.zunza.gongsamo.participant.entity.QParticipant
 import com.zunza.gongsamo.post.constant.SortType
 import com.zunza.gongsamo.post.dto.LocationFilter
 import com.zunza.gongsamo.post.dto.NextCursor
@@ -13,7 +14,6 @@ import com.zunza.gongsamo.post.dto.PostCursor
 import com.zunza.gongsamo.post.dto.PostDetailsResponse
 import com.zunza.gongsamo.post.dto.PostPageResponse
 import com.zunza.gongsamo.post.dto.PostPreview
-import com.zunza.gongsamo.post.entity.QParticipant
 import com.zunza.gongsamo.post.entity.QPost
 import com.zunza.gongsamo.user.entity.QUser
 import org.springframework.stereotype.Repository
