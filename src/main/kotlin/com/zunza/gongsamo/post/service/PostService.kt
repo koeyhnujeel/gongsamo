@@ -1,5 +1,6 @@
 package com.zunza.gongsamo.post.service
 
+import com.zunza.gongsamo.chat.dto.PostCreatedEvent
 import com.zunza.gongsamo.post.constant.SortType
 import com.zunza.gongsamo.post.dto.CreatePostRequest
 import com.zunza.gongsamo.post.dto.LocationFilter
@@ -14,6 +15,7 @@ import com.zunza.gongsamo.post.repository.PostRepository
 import com.zunza.gongsamo.user.exception.UserNotFoundException
 import com.zunza.gongsamo.user.repository.UserRepository
 import jakarta.transaction.Transactional
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service
 class PostService(
     private val postRepository: PostRepository,
     private val userRepository: UserRepository,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) {
     @Transactional
     fun createPost(
@@ -37,6 +40,8 @@ class PostService(
         val participant = Participant.createOf(post, user, true)
         post.addParticipant(participant)
         postRepository.save(post)
+
+        applicationEventPublisher.publishEvent(PostCreatedEvent(post))
     }
 
     fun getPostPage(

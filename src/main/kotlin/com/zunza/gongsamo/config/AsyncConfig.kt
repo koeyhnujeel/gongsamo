@@ -13,10 +13,22 @@ class AsyncConfig {
     @Bean(name = ["fcmNotificationExecutor"])
     fun fcmNotificationExecutor(): Executor {
         val executor = ThreadPoolTaskExecutor()
-        executor.corePoolSize = 5
-        executor.maxPoolSize = 10
-        executor.queueCapacity = 20
-        executor.setThreadNamePrefix("fcmExecutor")
+        executor.corePoolSize = 3
+        executor.maxPoolSize = 6
+        executor.queueCapacity = 15
+        executor.setThreadNamePrefix("fcmExecutor-")
+        executor.setWaitForTasksToCompleteOnShutdown(true)
+        executor.initialize()
+        return executor
+    }
+
+    @Bean(name = ["chatCreationExecutor"])
+    fun chatExecutor(): Executor {
+        val executor = ThreadPoolTaskExecutor()
+        executor.corePoolSize = 3
+        executor.maxPoolSize = 6
+        executor.queueCapacity = 15
+        executor.setThreadNamePrefix("chatCreator-")
         executor.setWaitForTasksToCompleteOnShutdown(true)
         executor.initialize()
         return executor
