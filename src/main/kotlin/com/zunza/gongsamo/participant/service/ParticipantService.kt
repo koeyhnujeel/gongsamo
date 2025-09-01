@@ -26,7 +26,7 @@ class ParticipantService(
     private val applicationEventPublisher: ApplicationEventPublisher
 ) {
     /**
-     * TODO 동시성 문제 확인(lock 알아보기) | 알림 보내기
+     * TODO 동시성 문제 확인(lock 알아보기)
      */
     @Transactional
     fun createParticipation(postId: Long, userId: Long) {
